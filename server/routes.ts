@@ -65,7 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const response: LiveKitTokenResponse = {
         token: jwt,
-        wsUrl: LIVEKIT_WS_URL,
+        wsUrl: LIVEKIT_WS_URL!,
       };
 
       res.json(response);
