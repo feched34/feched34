@@ -3,8 +3,11 @@ import {
   RoomEvent,
   RemoteParticipant,
   LocalParticipant,
-  Track,
+  LocalAudioTrack,
   createLocalAudioTrack,
+  ConnectionState,
+  TrackPublication,
+  Participant,
 } from 'livekit-client';
 
 export interface VoiceChatOptions {
@@ -12,15 +15,15 @@ export interface VoiceChatOptions {
   wsUrl: string;
   onParticipantConnected?: (participant: RemoteParticipant) => void;
   onParticipantDisconnected?: (participant: RemoteParticipant) => void;
-  onTrackMuted?: (track: Track, participant?: RemoteParticipant) => void;
-  onTrackUnmuted?: (track: Track, participant?: RemoteParticipant) => void;
+  onTrackMuted?: (publication: TrackPublication, participant: Participant) => void;
+  onTrackUnmuted?: (publication: TrackPublication, participant: Participant) => void;
   onConnectionStateChanged?: (state: string) => void;
   onError?: (error: Error) => void;
 }
 
 export class VoiceChatService {
   private room: Room;
-  private audioTrack: Track | null = null;
+  private audioTrack: LocalAudioTrack | null = null;
 
   constructor() {
     this.room = new Room();
@@ -39,17 +42,17 @@ export class VoiceChatService {
         options.onParticipantDisconnected?.(participant);
       });
 
-      this.room.on(RoomEvent.TrackMuted, (track: Track, participant?: RemoteParticipant) => {
-        console.log('Track muted:', track.kind, participant?.identity);
-        options.onTrackMuted?.(track, participant);
+      this.room.on(RoomEvent.TrackMuted, (publication: TrackPublication, participant: Participant) => {
+        console.log('Track muted:', publication.kind, participant.identity);
+        options.onTrackMuted?.(publication, participant);
       });
 
-      this.room.on(RoomEvent.TrackUnmuted, (track: Track, participant?: RemoteParticipant) => {
-        console.log('Track unmuted:', track.kind, participant?.identity);
-        options.onTrackUnmuted?.(track, participant);
+      this.room.on(RoomEvent.TrackUnmuted, (publication: TrackPublication, participant: Participant) => {
+        console.log('Track unmuted:', publication.kind, participant.identity);
+        options.onTrackUnmuted?.(publication, participant);
       });
 
-      this.room.on(RoomEvent.ConnectionStateChanged, (state) => {
+      this.room.on(RoomEvent.ConnectionStateChanged, (state: ConnectionState) => {
         console.log('Connection state changed:', state);
         options.onConnectionStateChanged?.(state.toString());
       });
@@ -61,14 +64,11 @@ export class VoiceChatService {
       // Connect to room
       await this.room.connect(options.wsUrl, options.token);
 
-      // Create and publish audio track
-      this.audioTrack = await createLocalAudioTrack({
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      });
+      // Enable microphone
+      await this.room.localParticipant.setMicrophoneEnabled(true);
 
-      await this.room.localParticipant.publishTrack(this.audioTrack);
+      // Get the audio track
+      this.audioTrack = this.room.localParticipant.audioTrackPublications.values().next().value?.audioTrack as LocalAudioTrack;
 
       console.log('Connected to voice chat room');
     } catch (error) {
@@ -79,19 +79,16 @@ export class VoiceChatService {
   }
 
   async disconnect(): Promise<void> {
-    if (this.audioTrack) {
-      this.audioTrack.stop();
-      this.audioTrack = null;
-    }
     await this.room.disconnect();
+    this.audioTrack = null;
   }
 
   async toggleMute(): Promise<boolean> {
-    if (!this.audioTrack) return false;
-
-    const isMuted = this.audioTrack.isMuted;
-    await this.audioTrack.setMuted(!isMuted);
-    return !isMuted;
+    const localParticipant = this.room.localParticipant;
+    const isMuted = localParticipant.isMicrophoneEnabled;
+    
+    await localParticipant.setMicrophoneEnabled(!isMuted);
+    return isMuted; // Return the new muted state
   }
 
   getParticipants(): Array<LocalParticipant | RemoteParticipant> {
@@ -103,6 +100,6 @@ export class VoiceChatService {
   }
 
   isMuted(): boolean {
-    return this.audioTrack?.isMuted ?? false;
+    return !this.room.localParticipant.isMicrophoneEnabled;
   }
 }
