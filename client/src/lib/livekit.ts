@@ -58,22 +58,46 @@ export class VoiceChatService {
         options.onConnectionStateChanged?.(state.toString());
       });
 
+      this.room.on(RoomEvent.RoomMetadataChanged, (metadata) => {
+        console.log('Room metadata changed:', metadata);
+      });
+
+      this.room.on(RoomEvent.LocalTrackPublished, (publication) => {
+        console.log('Local track published:', publication.kind, publication.source);
+      });
+
+      this.room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        console.log('Track subscribed:', track.kind, 'from', participant.identity);
+        if (track.kind === 'audio') {
+          console.log('Audio track subscribed, enabling audio playback');
+          track.attach();
+        }
+      });
+
       this.room.on(RoomEvent.Disconnected, () => {
         console.log('Disconnected from room');
       });
 
+      console.log('Connecting to LiveKit with URL:', options.wsUrl);
+      console.log('Token length:', options.token.length);
+      
       // Connect to room
       await this.room.connect(options.wsUrl, options.token);
+      console.log('LiveKit room connected successfully');
 
       // Create and publish audio track manually
+      console.log('Creating local audio track...');
       this.audioTrack = await createLocalAudioTrack({
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
       });
+      console.log('Audio track created:', this.audioTrack);
 
       // Publish the audio track
+      console.log('Publishing audio track...');
       await this.room.localParticipant.publishTrack(this.audioTrack);
+      console.log('Audio track published successfully');
 
       console.log('Connected to voice chat room');
     } catch (error) {

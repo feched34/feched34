@@ -16,9 +16,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
   // LiveKit configuration
-  const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY || "devkey";
-  const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || "secret";
-  const LIVEKIT_WS_URL = process.env.LIVEKIT_WS_URL || "ws://localhost:7880";
+  const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
+  const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET;
+  const LIVEKIT_WS_URL = process.env.LIVEKIT_WS_URL;
+
+  if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_WS_URL) {
+    console.error("Missing required LiveKit environment variables");
+    console.error("LIVEKIT_API_KEY:", !!LIVEKIT_API_KEY);
+    console.error("LIVEKIT_API_SECRET:", !!LIVEKIT_API_SECRET);
+    console.error("LIVEKIT_WS_URL:", !!LIVEKIT_WS_URL);
+  }
 
   // Generate LiveKit token
   app.post("/api/token", async (req, res) => {
@@ -30,9 +37,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create access token
+      console.log(`Creating token for user: ${nickname}, room: ${roomName}`);
       const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
         identity: nickname,
-        ttl: '10m',
+        ttl: '1h',
       });
 
       token.addGrant({
@@ -40,9 +48,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         roomJoin: true,
         canPublish: true,
         canSubscribe: true,
+        canPublishData: true,
       });
 
       const jwt = await token.toJwt();
+      console.log(`Generated token for ${nickname}: ${jwt.substring(0, 50)}...`);
 
       // Add participant to storage
       await storage.createParticipant({

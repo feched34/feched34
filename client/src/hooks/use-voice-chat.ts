@@ -141,9 +141,10 @@ export function useVoiceChat({ nickname, roomName = 'default-room' }: UseVoiceCh
           setState(prev => ({ ...prev, isConnected: connectionState === 'connected' }));
         },
         onError: (error) => {
+          console.error('LiveKit connection error:', error);
           setState(prev => ({
             ...prev,
-            connectionError: error.message,
+            connectionError: `Connection failed: ${error.message}`,
             isConnecting: false,
           }));
         },
@@ -165,10 +166,19 @@ export function useVoiceChat({ nickname, roomName = 'default-room' }: UseVoiceCh
 
     } catch (error) {
       console.error('Failed to connect to voice chat:', error);
+      let errorMessage = 'Failed to connect';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        if (error.message.includes('403')) {
+          errorMessage = 'Authentication failed - please check LiveKit credentials';
+        } else if (error.message.includes('websocket')) {
+          errorMessage = 'WebSocket connection failed - please check network';
+        }
+      }
       setState(prev => ({
         ...prev,
         isConnecting: false,
-        connectionError: error instanceof Error ? error.message : 'Failed to connect',
+        connectionError: errorMessage,
       }));
     }
   }, [nickname, roomName, state.isConnecting, state.isConnected, connectWebSocket, startDurationTimer]);
