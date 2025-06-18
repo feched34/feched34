@@ -63,7 +63,7 @@
   }
 
   body {
-    @apply font-inter antialiased bg-gray-50 text-foreground;
+    @apply antialiased bg-gray-50 text-foreground;
     font-family: 'Inter', sans-serif;
   }
 }

@@ -5,6 +5,10 @@ import { storage } from "./storage";
 import { insertParticipantSchema, type LiveKitTokenRequest, type LiveKitTokenResponse } from "@shared/schema";
 import { AccessToken } from "livekit-server-sdk";
 
+interface ExtendedWebSocket extends WebSocket {
+  roomId?: string;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
@@ -112,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // WebSocket connection handling
-  wss.on('connection', (ws: WebSocket) => {
+  wss.on('connection', (ws: ExtendedWebSocket) => {
     console.log('WebSocket client connected');
 
     ws.on('message', async (message: Buffer) => {
@@ -135,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Broadcast participant updates to WebSocket clients
   function broadcastParticipantUpdate(roomId: string) {
-    wss.clients.forEach((client: any) => {
+    wss.clients.forEach((client: ExtendedWebSocket) => {
       if (client.readyState === WebSocket.OPEN && client.roomId === roomId) {
         storage.getParticipantsByRoom(roomId).then(participants => {
           client.send(JSON.stringify({
