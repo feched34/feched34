@@ -8,6 +8,7 @@ import {
   ConnectionState,
   TrackPublication,
   Participant,
+  Track,
 } from 'livekit-client';
 
 export interface VoiceChatOptions {
@@ -64,11 +65,15 @@ export class VoiceChatService {
       // Connect to room
       await this.room.connect(options.wsUrl, options.token);
 
-      // Enable microphone
-      await this.room.localParticipant.setMicrophoneEnabled(true);
+      // Create and publish audio track manually
+      this.audioTrack = await createLocalAudioTrack({
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      });
 
-      // Get the audio track
-      this.audioTrack = this.room.localParticipant.audioTrackPublications.values().next().value?.audioTrack as LocalAudioTrack;
+      // Publish the audio track
+      await this.room.localParticipant.publishTrack(this.audioTrack);
 
       console.log('Connected to voice chat room');
     } catch (error) {
@@ -79,16 +84,19 @@ export class VoiceChatService {
   }
 
   async disconnect(): Promise<void> {
+    if (this.audioTrack) {
+      this.audioTrack.stop();
+      this.audioTrack = null;
+    }
     await this.room.disconnect();
-    this.audioTrack = null;
   }
 
   async toggleMute(): Promise<boolean> {
     const localParticipant = this.room.localParticipant;
-    const isMuted = localParticipant.isMicrophoneEnabled;
+    const currentlyEnabled = localParticipant.isMicrophoneEnabled;
     
-    await localParticipant.setMicrophoneEnabled(!isMuted);
-    return isMuted; // Return the new muted state
+    await localParticipant.setMicrophoneEnabled(!currentlyEnabled);
+    return currentlyEnabled; // Return the new muted state (inverted)
   }
 
   getParticipants(): Array<LocalParticipant | RemoteParticipant> {
