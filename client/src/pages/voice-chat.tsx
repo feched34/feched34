@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import NickLogin from "@/components/NickLogin";
+import MusicPlayer from "@/components/music/MusicPlayer";
 
 export default function VoiceChat() {
   const [currentScreen, setCurrentScreen] = useState<'join' | 'chat'>('join');
@@ -66,86 +68,16 @@ export default function VoiceChat() {
 
   if (currentScreen === 'join') {
     return (
-      <>
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-            {/* Logo */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
-                <i className="fas fa-microphone text-white text-2xl"></i>
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">VoiceConnect</h1>
-              <p className="text-gray-600">Join the conversation instantly</p>
-            </div>
-
-            {/* Nickname Form */}
-            <form onSubmit={handleJoinRoom} className="space-y-6">
-              <div className="relative">
-                <Input
-                  type="text"
-                  id="nickname"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder=" "
-                  required
-                  maxLength={20}
-                  className="peer w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:outline-none transition-colors duration-200 bg-white"
-                />
-                <Label 
-                  htmlFor="nickname" 
-                  className="absolute left-4 top-3 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:top-0 peer-focus:text-sm peer-focus:text-primary peer-focus:bg-white peer-focus:px-2 peer-focus:-ml-2 peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-sm peer-[:not(:placeholder-shown)]:text-primary peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-2 peer-[:not(:placeholder-shown)]:-ml-2"
-                >
-                  Enter your nickname
-                </Label>
-              </div>
-
-              <Button 
-                type="submit"
-                className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
-                disabled={!nickname.trim()}
-              >
-                <i className="fas fa-microphone mr-2"></i>
-                Join Voice Chat
-              </Button>
-            </form>
-
-            {/* Feature List */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray-600 text-center mb-4">What you get:</p>
-              <div className="space-y-2">
-                <div className="flex items-center text-sm text-gray-700">
-                  <i className="fas fa-check text-success mr-3"></i>
-                  Real-time voice communication
-                </div>
-                <div className="flex items-center text-sm text-gray-700">
-                  <i className="fas fa-check text-success mr-3"></i>
-                  No registration required
-                </div>
-                <div className="flex items-center text-sm text-gray-700">
-                  <i className="fas fa-check text-success mr-3"></i>
-                  Crystal clear audio quality
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <LoadingOverlay isVisible={isConnecting} />
-        <ErrorModal 
-          isVisible={showError}
-          message={connectionError || ""}
-          onRetry={() => {
-            setShowError(false);
-            connect();
-          }}
-          onClose={() => setShowError(false)}
-        />
-      </>
+      <NickLogin onLogin={(nick) => setNickname(nick)} />
     );
   }
 
   return (
     <>
+      {/* Sağ üst köşede sabit müzik çalar */}
+      <div className="fixed top-6 right-6 z-50 w-[380px] max-w-full">
+        <MusicPlayer currentUser={{ full_name: nickname }} />
+      </div>
       <div className="min-h-screen">
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200">

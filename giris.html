@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>gocccuuum hoşgeldin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', ui-sans-serif;
+      background: #101320;
+      overflow: hidden;
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+      animation: fadeInUp 0.8s forwards;
+    }
+    .fade-in-1 { animation-delay: 0.15s; }
+    .fade-in-2 { animation-delay: 0.3s; }
+    .fade-in-3 { animation-delay: 0.45s; }
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .glass {
+      background: rgba(22, 24, 40, 0.85);
+      backdrop-filter: blur(18px) saturate(140%);
+      box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25);
+      border-radius: 22px;
+      border: 1.5px solid rgba(160, 160, 255, 0.12);
+    }
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #23305b 35%, #2ec8fa66 65%, transparent);
+      opacity: 0.3;
+      margin: 28px 0;
+    }
+    @media (max-width: 500px) {
+      .glass { max-width: 94vw; padding: 1.6rem 1.1rem; }
+      .main-title { font-size: 2rem !important;}
+    }
+    .logo-emoji {
+      animation: popIn 0.9s cubic-bezier(.21,1.5,.39,1) both;
+      filter: drop-shadow(0 2px 24px #2ec8fa55);
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.7) rotate(-22deg); }
+      80% { opacity: 1; transform: scale(1.08) rotate(5deg);}
+      100% { opacity: 1; transform: scale(1) rotate(0);}
+    }
+    .main-title {
+      font-size: 2.5rem;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1.13;
+    }
+    .btn-shine {
+      border: 2px solid transparent;
+      background:
+        linear-gradient(#161828, #161828) padding-box,
+        linear-gradient(90deg, #6a7bfd, #2ec8fa 80%) border-box;
+      border-radius: 12px;
+      transition: background 0.24s, box-shadow 0.24s;
+    }
+    .btn-shine:hover {
+      background: linear-gradient(90deg,#556bff 20%,#2ec8fa 90%);
+      box-shadow: 0 4px 24px 0 #3c5ddf44;
+      color: #fff;
+      outline: 2px solid #2ec8fa80;
+    }
+    .input-glow:focus {
+      box-shadow: 0 0 0 2.5px #8fa7ff80, 0 0 8px 0 #2ec8fa55;
+      border-color: #6a7bfd;
+      outline: none;
+      background: rgba(34,38,64,0.98);
+      transition: box-shadow 0.25s, background 0.25s;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center relative">
+
+  <!-- ParticlesJS arkaplan -->
+  <div id="particles-js" style="position:fixed; inset:0; z-index:0;"></div>
+
+  <!-- Ana kart -->
+  <main class="glass max-w-md w-full flex flex-col relative z-10 border-[#23253a] border pt-10 pr-10 pb-10 pl-10 shadow-2xl items-center">
+
+    <!-- Logo -->
+    <div class="fade-in fade-in-1 flex w-28 h-28 logo-emoji border rounded-full mb-7 items-center justify-center overflow-hidden">
+      <img src="goccord-logo.png" alt="Goçcord Logo" class="w-full h-full object-cover">
+    </div>
+
+    <!-- Başlık -->
+    <h2 class="main-title fade-in fade-in-2 leading-tight select-none font-semibold text-white tracking-tight text-center mb-2">Gocccuuum Hoşgeldin</h2>
+    <div class="divider"></div>
+
+    <!-- Giriş Formu -->
+    <form class="fade-in fade-in-3 w-full flex flex-col gap-6" autocomplete="off" onsubmit="event.preventDefault(); handleJoin();">
+      <label class="w-full">
+        <span class="block text-sm font-medium text-[#aab7e7] mb-2 pl-1">Takma Ad (Nickname)</span>
+        <input id="nickname" required spellcheck="false" name="nickname" maxlength="22" placeholder="Nickini giriver gocum" class="input-glow w-full bg-[#15182a] text-[1.15rem] placeholder-[#7c8dbb] transition focus:ring-0 outline-none font-medium text-[#e5eaff] border-[#23253a] border rounded-lg pt-3 pr-5 pb-3 pl-5" autocomplete="off">
+      </label>
+      <button type="submit" class="btn-shine w-full py-3 rounded-xl flex items-center justify-center gap-2 text-lg font-semibold tracking-tight text-[#e4eaff] shadow-lg transition cursor-pointer select-none group relative overflow-hidden">
+        <span>Giriş Yap</span>
+        <span><svg id="lucide-mic" width="22" height="22"></svg></span>
+      </button>
+    </form>
+
+    <!-- Alt yazı -->
+    <div class="text-[#6a7bfdbb] select-none text-xs tracking-wide text-center mt-7">Goçlarla gerçek zamanlı s2şşşşşşş</div>
+  </main>
+
+  <script>
+    // Lucide ikonları yükle
+    lucide.createIcons({ icons: { "mic": lucide.icons['mic-2'] } });
+
+    // Particles.js ayarları
+    particlesJS('particles-js', {
+      "particles": {
+        "number": { "value": 56, "density": { "enable": true, "value_area": 1100 } },
+        "color": { "value": ["#ffe099", "#4dc9fa", "#fff"] },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.22, "random": true },
+        "size": { "value": 3.5, "random": true },
+        "line_linked": {
+          "enable": true,
+          "distance": 110,
+          "color": "#ffe09966",
+          "opacity": 0.19,
+          "width": 1.2
+        },
+        "move": { "enable": true, "speed": 1.1, "direction": "none", "straight": false }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": { "enable": true, "mode": "grab" },
+          "onclick": { "enable": false },
+          "resize": true
+        },
+        "modes": {
+          "grab": { "distance": 130, "line_linked": { "opacity": 0.32 } }
+        }
+      },
+      "retina_detect": true
+    });
+
+    // Sayfa yüklendiğinde animasyonları başlat
+    window.onload = () => {
+      document.querySelectorAll('.fade-in').forEach(el => {
+        el.style.opacity = 0;
+        el.style.animationPlayState = 'running';
+      });
+    };
+
+    // Giriş butonuna basıldığında
+    function handleJoin() {
+      const nickname = document.getElementById('nickname').value.trim();
+      if (!nickname) {
+        document.getElementById('nickname').focus();
+        return;
+      }
+      document.querySelector('main').style.transition = 'opacity 0.6s, transform 0.8s cubic-bezier(.8,2,.2,1)';
+      document.querySelector('main').style.opacity = '0';
+      document.querySelector('main').style.transform = 'translateY(-40px) scale(1.05)';
+      setTimeout(() => {
+        alert('Hoşgeldin, ' + nickname + '!');
+        location.reload(); // veya başka sayfaya yönlendirme yapılabilir
+      }, 700);
+    }
+  </script>
+</body>
+</html>
