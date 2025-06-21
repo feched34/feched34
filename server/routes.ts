@@ -22,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // LiveKit configuration
   const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
   const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET;
-  const LIVEKIT_WS_URL = process.env.LIVEKIT_URL;
+  const LIVEKIT_WS_URL = process.env.LIVEKIT_WS_URL;
 
   if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_WS_URL) {
     console.error("Missing required LiveKit environment variables");
