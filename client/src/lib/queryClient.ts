@@ -8,14 +8,15 @@ async function throwIfResNotOk(res: Response) {
 }
 
 // Server URL'yi environment variable'dan al, yoksa relative URL kullan (production için)
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.MODE === 'production' ? '' : 'http://localhost:5050');
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || (window.location.hostname !== 'localhost' ? '' : 'http://localhost:5050');
 
 // Debug için URL'yi yazdır
 console.log('Environment:', {
   MODE: import.meta.env.MODE,
   PROD: import.meta.env.PROD,
   VITE_SERVER_URL: import.meta.env.VITE_SERVER_URL,
-  SERVER_URL: SERVER_URL
+  SERVER_URL: SERVER_URL,
+  hostname: window.location.hostname
 });
 
 export async function apiRequest(
