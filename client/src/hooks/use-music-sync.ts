@@ -28,7 +28,7 @@ export function useMusicSync({ roomId, userId, onPlay, onPause, onAddToQueue, on
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
     // Production'da doğru URL kullan, development'ta localhost
-    const wsUrl = window.location.hostname !== 'localhost'
+    const wsUrl = import.meta.env.PROD
       ? `wss://feched.onrender.com/ws`
       : 'ws://localhost:5050/ws';
     
