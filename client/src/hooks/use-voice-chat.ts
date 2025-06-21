@@ -102,7 +102,7 @@ export function useVoiceChat({ nickname, roomName = 'default-room' }: UseVoiceCh
 
     try {
       console.log('Connecting to voice chat with nickname:', nickname);
-      const response = await apiRequest('POST', '/api/token', { nickname, roomName });
+      const response = await apiRequest('POST', '/api/auth', { nickname, roomName });
       const { token, wsUrl }: LiveKitTokenResponse = await response.json();
       
       console.log('Received token and wsUrl:', { 
