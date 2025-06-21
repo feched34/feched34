@@ -27,11 +27,44 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          livekit: ['livekit-client'],
+          ui: ['@radix-ui/react-toast', '@radix-ui/react-tooltip'],
+          particles: ['tsparticles', '@tsparticles/react'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
   },
   server: {
     fs: {
       strict: true,
       deny: ["**/.*"],
     },
+    hmr: {
+      overlay: false,
+    },
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'livekit-client',
+      '@tsparticles/react',
+      'tsparticles',
+    ],
+  },
+  css: {
+    devSourcemap: true,
   },
 });

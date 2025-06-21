@@ -6,8 +6,8 @@ interface LoadingOverlayProps {
 
 export function LoadingOverlay({ 
   isVisible, 
-  message = "Connecting to voice chat...", 
-  subMessage = "Please allow microphone access when prompted" 
+  message = "Bağlanıyorum kral bir saniye", 
+  subMessage = "Mikrofona izin verirsin" 
 }: LoadingOverlayProps) {
   if (!isVisible) return null;
 

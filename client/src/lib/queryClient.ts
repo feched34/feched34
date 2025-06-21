@@ -7,12 +7,18 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Server URL'yi environment variable'dan al, yoksa localhost kullan
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5050';
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // URL'yi server adresi ile birleştir
+  const fullUrl = url.startsWith('http') ? url : `${SERVER_URL}${url}`;
+  
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +35,11 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const fullUrl = (queryKey[0] as string).startsWith('http') 
+      ? queryKey[0] as string 
+      : `${SERVER_URL}${queryKey[0] as string}`;
+      
+    const res = await fetch(fullUrl, {
       credentials: "include",
     });
 

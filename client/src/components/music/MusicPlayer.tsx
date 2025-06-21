@@ -1,0 +1,649 @@
+import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
+import { Card } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Slider } from '../ui/slider';
+import { Badge } from '../ui/badge';
+import { ScrollArea } from '../ui/scroll-area';
+import { toast } from '../../hooks/use-toast';
+import { useMusicSync } from '../../hooks/use-music-sync';
+import { 
+  Play, 
+  Pause, 
+  SkipBack, 
+  SkipForward, 
+  Volume2, 
+  Shuffle, 
+  Repeat, 
+  Repeat1, 
+  Search,
+  Loader2,
+  Music,
+  X,
+  Plus
+} from 'lucide-react';
+
+// YouTube Iframe API yükleyici - komponentin dışında tanımla
+const loadYouTubeIframeAPI = () => {
+  if ((window as any).YT) return Promise.resolve((window as any).YT);
+  return new Promise(resolve => {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    (window as any).onYouTubeIframeAPIReady = () => resolve((window as any).YT);
+    document.body.appendChild(tag);
+  });
+};
+
+// Şarkı tipi
+export type Song = {
+  id: string;
+  title: string;
+  artist: string;
+  video_id: string;
+  thumbnail: string;
+  duration: string;
+  queue_position: number;
+};
+
+interface MusicPlayerProps {
+  currentUser: { full_name: string } | null;
+  isMuted?: boolean;
+  isDeafened?: boolean;
+  roomId?: string;
+  userId?: string;
+}
+
+const MusicPlayer: React.FC<MusicPlayerProps> = memo(({ currentUser, isMuted = false, isDeafened = false, roomId, userId }) => {
+  const [queue, setQueue] = useState<Song[]>([]);
+  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(60);
+  const [isReady, setIsReady] = useState(false);
+  const [search, setSearch] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<'none' | 'all' | 'one'>('none');
+  const [isShuffled, setIsShuffled] = useState(false);
+  const playerRef = useRef<any>(null);
+  const ytPlayer = useRef<any>(null);
+
+  // Müzik senkronizasyonu
+  const { sendPlayCommand, sendPauseCommand, sendAddToQueueCommand, sendShuffleCommand, sendRepeatCommand } = useMusicSync({
+    roomId: roomId || 'default-room',
+    userId: userId || 'anonymous',
+    onPlay: (videoId, userId) => {
+      console.log(`Remote play command from ${userId}:`, videoId);
+      // Remote play komutunu işle
+      const song = queue.find(s => s.video_id === videoId);
+      if (song) {
+        setCurrentSong(song);
+        setIsPlaying(true);
+      }
+    },
+    onPause: (userId) => {
+      console.log(`Remote pause command from ${userId}`);
+      setIsPlaying(false);
+    },
+    onAddToQueue: (song, userId) => {
+      console.log(`Remote add to queue from ${userId}:`, song);
+      addSong(song);
+      toast({
+        title: "Şarkı eklendi",
+        description: `${song.title} - ${userId} tarafından eklendi`,
+      });
+    },
+    onShuffle: (isShuffled, userId) => {
+      console.log(`Remote shuffle command from ${userId}:`, isShuffled);
+      setIsShuffled(isShuffled);
+    },
+    onRepeat: (repeatMode, userId) => {
+      console.log(`Remote repeat command from ${userId}:`, repeatMode);
+      setRepeatMode(repeatMode as 'none' | 'all' | 'one');
+    }
+  });
+
+  // YouTube player'ı başlat - useCallback ile optimize et
+  const initializePlayer = useCallback(async () => {
+    if (ytPlayer.current) return;
+    
+    try {
+      const YT = await loadYouTubeIframeAPI();
+      ytPlayer.current = new YT.Player(playerRef.current, {
+        height: '180',
+        width: '320',
+        playerVars: {
+          playsinline: 1,
+          controls: 0,
+          showinfo: 0,
+          rel: 0,
+          origin: window.location.origin,
+          enablejsapi: 1,
+          fs: 0,
+          modestbranding: 1,
+          iv_load_policy: 3,
+        },
+        events: {
+          onReady: (e: any) => {
+            console.log('YouTube player ready');
+            e.target.setVolume(volume);
+            setIsReady(true);
+          },
+          onStateChange: (e: any) => {
+            console.log('YouTube player state changed:', e.data);
+            if (e.data === YT.PlayerState.ENDED) handleSongEnd();
+            if (e.data === YT.PlayerState.PLAYING) setIsPlaying(true);
+            if (e.data === YT.PlayerState.PAUSED) setIsPlaying(false);
+            if (e.data === YT.PlayerState.BUFFERING) { /* do nothing */ }
+          },
+          onError: (e: any) => {
+            console.error('YouTube player error:', e.data);
+          }
+        },
+      });
+    } catch (error) {
+      console.error('Failed to initialize YouTube player:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    initializePlayer();
+
+    return () => {
+      if (ytPlayer.current) {
+        try {
+           ytPlayer.current.destroy();
+        } catch (e) {
+          console.error("Error destroying player", e);
+        }
+        ytPlayer.current = null;
+      }
+    };
+  }, [initializePlayer]);
+
+  // Şarkı değişince oynat
+  useEffect(() => {
+    if (ytPlayer.current && isReady && currentSong) {
+      console.log('Loading video:', currentSong.video_id);
+      ytPlayer.current.loadVideoById(currentSong.video_id);
+    }
+  }, [currentSong, isReady]);
+
+  // Ses değişince uygula - debounce ile optimize et
+  useEffect(() => {
+    if (ytPlayer.current && isReady) {
+      const timeoutId = setTimeout(() => {
+        try {
+          ytPlayer.current.setVolume(volume);
+          console.log('Volume set to:', volume);
+        } catch (error) {
+          console.error('Error setting volume:', error);
+        }
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [volume, isReady]);
+
+  // Susturma durumunu takip et - sadece deafen için ses kontrolü
+  useEffect(() => {
+    if (ytPlayer.current && isReady) {
+      try {
+        // Deafen durumunda sadece sesi kapat
+        if (isDeafened) {
+          ytPlayer.current.setVolume(0);
+        } else {
+          ytPlayer.current.setVolume(volume);
+        }
+      } catch (error) {
+        console.error('Error handling deafen state:', error);
+      }
+    }
+  }, [isDeafened, isReady, volume]);
+
+  // Şarkı bitince ne olacak - useCallback ile optimize et
+  const handleSongEnd = useCallback(() => {
+    if (repeatMode === 'one' && currentSong) {
+      ytPlayer.current.seekTo(0);
+      ytPlayer.current.playVideo();
+      return;
+    }
+    if (isShuffled) {
+      const nextIndex = Math.floor(Math.random() * queue.length);
+      setCurrentSong(queue[nextIndex]);
+    }
+    const idx = queue.findIndex(s => s.id === currentSong?.id);
+    if (idx === -1) return;
+
+    if (repeatMode === 'all') {
+      const nextIndex = (idx + 1) % queue.length;
+      setCurrentSong(queue[nextIndex]);
+    } else if (idx < queue.length - 1) {
+      setCurrentSong(queue[idx + 1]);
+    } else {
+      setIsPlaying(false);
+      setCurrentSong(null);
+    }
+  }, [repeatMode, currentSong, queue, isShuffled]);
+
+  // Oynat/duraklat - useCallback ile optimize et
+  const togglePlayPause = useCallback(() => {
+    if (!currentSong || !isReady || !ytPlayer.current) {
+      console.log('Cannot toggle play/pause:', { currentSong: !!currentSong, isReady, player: !!ytPlayer.current });
+      return;
+    }
+    
+    try {
+      if (isPlaying) {
+        console.log('Pausing video');
+        ytPlayer.current.pauseVideo();
+        // Senkronizasyon için pause komutu gönder
+        if (roomId && userId) {
+          sendPauseCommand();
+        }
+      } else {
+        console.log('Playing video');
+        ytPlayer.current.playVideo();
+        // Senkronizasyon için play komutu gönder
+        if (roomId && userId && currentSong) {
+          sendPlayCommand(currentSong.video_id);
+        }
+      }
+      setIsPlaying(!isPlaying);
+    } catch (error: any) {
+      console.error('Error toggling play/pause:', error);
+    }
+  }, [currentSong, isReady, isPlaying, roomId, userId, sendPlayCommand, sendPauseCommand]);
+
+  // Kuyrukta ileri/geri - useCallback ile optimize et
+  const nextSong = useCallback(() => {
+    if (!currentSong) return;
+    const idx = queue.findIndex(s => s.id === currentSong.id);
+    if (isShuffled) {
+        const nextIndex = Math.floor(Math.random() * queue.length);
+        const nextSong = queue[nextIndex];
+        setCurrentSong(nextSong);
+        // Senkronizasyon için play komutu gönder
+        if (roomId && userId) {
+          sendPlayCommand(nextSong.video_id);
+        }
+    } else if (idx < queue.length - 1) {
+      const nextSong = queue[idx + 1];
+      setCurrentSong(nextSong);
+      // Senkronizasyon için play komutu gönder
+      if (roomId && userId) {
+        sendPlayCommand(nextSong.video_id);
+      }
+    } else if (repeatMode === 'all') {
+        const nextSong = queue[0];
+        setCurrentSong(nextSong);
+        // Senkronizasyon için play komutu gönder
+        if (roomId && userId) {
+          sendPlayCommand(nextSong.video_id);
+        }
+    }
+  }, [currentSong, queue, isShuffled, repeatMode, roomId, userId, sendPlayCommand]);
+
+  const prevSong = useCallback(() => {
+    if (!currentSong) return;
+    const idx = queue.findIndex(s => s.id === currentSong.id);
+    if (idx > 0) {
+      const prevSong = queue[idx - 1];
+      setCurrentSong(prevSong);
+      // Senkronizasyon için play komutu gönder
+      if (roomId && userId) {
+        sendPlayCommand(prevSong.video_id);
+      }
+    } else if (repeatMode === 'all') {
+        const prevSong = queue[queue.length - 1];
+        setCurrentSong(prevSong);
+        // Senkronizasyon için play komutu gönder
+        if (roomId && userId) {
+          sendPlayCommand(prevSong.video_id);
+        }
+    }
+  }, [currentSong, queue, repeatMode, roomId, userId, sendPlayCommand]);
+
+  // Kuyruğa şarkı ekle - useCallback ile optimize et
+  const addSong = useCallback((song: Song) => {
+    if (queue.find(s => s.id === song.id)) return;
+    setQueue(prev => [...prev, { ...song, queue_position: prev.length }]);
+    if (!currentSong) setCurrentSong(song);
+    
+    // Senkronizasyon için kuyruk ekleme komutu gönder
+    if (roomId && userId) {
+      sendAddToQueueCommand(song);
+    }
+  }, [queue, currentSong, roomId, userId, sendAddToQueueCommand]);
+
+  // Kuyruktan şarkı sil - useCallback ile optimize et
+  const removeSong = useCallback((id: string) => {
+    const songToRemove = queue.find(s => s.id === id);
+    if (!songToRemove) return;
+
+    setQueue(q => q.filter(s => s.id !== id));
+    if (currentSong?.id === id) {
+      const nextSongInQueue = queue.find(s => s.queue_position > songToRemove.queue_position);
+      setCurrentSong(nextSongInQueue || queue[0] || null);
+    }
+  }, [queue, currentSong]);
+
+  // YouTube arama - useCallback ile optimize et
+  const searchYouTube = useCallback(async (query: string) => {
+    if (!query.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      
+      if (data.items && data.items.length > 0) {
+        const video = data.items[0];
+        const song: Song = {
+          id: video.id.videoId,
+          title: video.snippet.title,
+          artist: video.snippet.channelTitle,
+          video_id: video.id.videoId,
+          thumbnail: video.snippet.thumbnails.medium.url,
+          duration: 'Unknown',
+          queue_position: queue.length,
+        };
+        addSong(song);
+        toast({
+          title: "Şarkı eklendi",
+          description: `${song.title} - ${song.artist}`,
+        });
+      }
+    } catch (error) {
+      console.error('YouTube search error:', error);
+      toast({
+        title: "Arama hatası",
+        description: "Şarkı bulunamadı",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  }, [addSong, queue.length]);
+
+  // Search submit handler - useCallback ile optimize et
+  const handleSearchSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    searchYouTube(search);
+  }, [search, searchYouTube]);
+
+  // Search input change handler - useCallback ile optimize et
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
+
+  // Volume change handler - useCallback ile optimize et
+  const handleVolumeChange = useCallback((value: number[]) => {
+    const newVolume = value[0];
+    console.log('Volume change requested:', newVolume);
+    setVolume(newVolume);
+  }, []);
+
+  // Repeat mode toggle - useCallback ile optimize et
+  const toggleRepeatMode = useCallback(() => {
+    setRepeatMode(prev => {
+      const newMode = prev === 'none' ? 'all' : prev === 'all' ? 'one' : 'none';
+      // Senkronizasyon için repeat mode değişikliğini gönder
+      if (roomId && userId) {
+        sendRepeatCommand(newMode);
+      }
+      return newMode;
+    });
+  }, [roomId, userId, sendRepeatCommand]);
+
+  // Shuffle toggle - useCallback ile optimize et
+  const toggleShuffle = useCallback(() => {
+    setIsShuffled(prev => {
+      const newShuffle = !prev;
+      // Senkronizasyon için shuffle değişikliğini gönder
+      if (roomId && userId) {
+        sendShuffleCommand(newShuffle);
+      }
+      return newShuffle;
+    });
+  }, [roomId, userId, sendShuffleCommand]);
+
+  // Queue'yu memoize et
+  const sortedQueue = useMemo(() => {
+    return [...queue].sort((a, b) => a.queue_position - b.queue_position);
+  }, [queue]);
+
+  return (
+    <Card className="glass bg-gradient-to-br from-[#0a0d1aee] via-[#1a1f3a99] to-[#2a2f5a88] border border-[#4dc9fa22] rounded-2xl shadow-2xl p-6 w-full max-w-md backdrop-blur-xl relative overflow-hidden">
+      {/* Arka plan efekti */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#4dc9fa08] via-transparent to-[#4dc9fa04] pointer-events-none"></div>
+      
+      {/* Header */}
+      <div className="relative z-10 mb-4">
+        <h3 className="text-lg font-bold bg-gradient-to-r from-[#4dc9fa] to-[#7dd3fc] bg-clip-text text-transparent tracking-tight flex items-center gap-2">
+          <Music className="w-5 h-5" />
+          Müzik Çalar
+        </h3>
+      </div>
+      
+      {/* Arama */}
+      <form onSubmit={handleSearchSubmit} className="relative z-10 mb-4">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              className="w-full bg-[#0f1422aa] text-[#e5eaff] border-[#4dc9fa33] placeholder-[#7c8dbb] focus:border-[#4dc9fa] focus:ring-[#4dc9fa22] rounded-lg h-9 pl-3 pr-10 backdrop-blur-sm transition-all duration-300 text-sm"
+              placeholder="🎵 Şarkı ara..."
+              value={search}
+              onChange={handleSearchChange}
+              disabled={isSearching}
+            />
+            {isSearching && (
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                <Loader2 className="h-4 w-4 animate-spin text-[#4dc9fa]" />
+              </div>
+            )}
+          </div>
+          <Button 
+            type="submit" 
+            disabled={isSearching || !search.trim()}
+            className="bg-gradient-to-r from-[#4dc9fa] to-[#3bb8e9] hover:from-[#3bb8e9] hover:to-[#2aa7d8] text-white font-medium rounded-lg h-9 px-3 transition-all duration-300 shadow-lg hover:shadow-[#4dc9fa33] disabled:opacity-50 text-sm"
+          >
+            {isSearching ? (
+              <div className="flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Ara</span>
+              </div>
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </form>
+
+      {/* Player */}
+      <div className="relative z-10 mb-4">
+        {/* YouTube Player Container */}
+        <div className="relative mb-3">
+          <div 
+            ref={playerRef} 
+            className="w-full rounded-xl overflow-hidden shadow-lg border border-[#4dc9fa22]"
+            style={{ aspectRatio: '16/9' }}
+          ></div>
+          {!isReady && (
+            <div className="absolute inset-0 bg-[#0f1422cc] backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#4dc9fa] mx-auto mb-2" />
+                <p className="text-[#aab7e7] text-sm">Yükleniyor...</p>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Şarkı Bilgisi */}
+        {currentSong && (
+          <div className="bg-[#0f1422aa] rounded-lg p-3 mb-3 border border-[#4dc9fa22] backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <img src={currentSong.thumbnail} alt={currentSong.title} className="w-12 h-12 rounded-lg object-cover shadow-md" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[#e5eaff] font-medium truncate text-sm">{currentSong.title}</p>
+                <p className="text-[#aab7e7] text-xs truncate">{currentSong.artist}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#4dc9fa] animate-pulse"></div>
+                  <span className="text-[#7c8dbb] text-xs">Çalıyor</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Kontroller */}
+        <div className="flex items-center justify-center gap-4 mb-3">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={prevSong} 
+            className="w-10 h-10 rounded-full bg-[#0f1422aa] text-[#e5eaff] hover:bg-[#4dc9fa22] hover:text-[#4dc9fa] border border-[#4dc9fa22] transition-all duration-300 backdrop-blur-sm"
+          >
+            <SkipBack className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={togglePlayPause} 
+            className="w-12 h-12 rounded-full bg-gradient-to-r from-[#4dc9fa] to-[#3bb8e9] text-white hover:from-[#3bb8e9] hover:to-[#2aa7d8] shadow-lg hover:shadow-[#4dc9fa44] transition-all duration-300"
+          >
+            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={nextSong} 
+            className="w-10 h-10 rounded-full bg-[#0f1422aa] text-[#e5eaff] hover:bg-[#4dc9fa22] hover:text-[#4dc9fa] border border-[#4dc9fa22] transition-all duration-300 backdrop-blur-sm"
+          >
+            <SkipForward className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Ses ve Mod Kontrolleri */}
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex items-center gap-2 flex-1">
+            <Volume2 className="h-4 w-4 text-[#4dc9fa]" />
+            <Slider 
+              value={[volume]} 
+              max={100} 
+              step={1} 
+              className="flex-1" 
+              onValueChange={handleVolumeChange}
+            />
+            <span className="text-[#aab7e7] text-xs font-mono w-8 text-center">{volume}%</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleShuffle}
+              className={`w-8 h-8 rounded-full transition-all duration-300 backdrop-blur-sm ${
+                isShuffled 
+                  ? 'bg-[#4dc9fa22] text-[#4dc9fa] border border-[#4dc9fa]' 
+                  : 'bg-[#0f1422aa] text-[#aab7e7] border border-[#4dc9fa22] hover:bg-[#4dc9fa11]'
+              }`}
+            >
+              <Shuffle className="h-3.5 w-3.5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleRepeatMode}
+              className={`w-8 h-8 rounded-full transition-all duration-300 backdrop-blur-sm ${
+                repeatMode !== 'none' 
+                  ? 'bg-[#4dc9fa22] text-[#4dc9fa] border border-[#4dc9fa]' 
+                  : 'bg-[#0f1422aa] text-[#aab7e7] border border-[#4dc9fa22] hover:bg-[#4dc9fa11]'
+              }`}
+            >
+              {repeatMode === 'one' ? <Repeat1 className="h-3.5 w-3.5" /> : <Repeat className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Kuyruk */}
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-semibold bg-gradient-to-r from-[#4dc9fa] to-[#7dd3fc] bg-clip-text text-transparent flex items-center gap-1">
+            <Music className="w-4 h-4" />
+            Kuyruk
+          </h4>
+          <Badge className="bg-[#4dc9fa22] text-[#4dc9fa] border border-[#4dc9fa] rounded-full px-2 py-0.5 text-xs">
+            {queue.length}
+          </Badge>
+        </div>
+        
+        <ScrollArea className="h-48 rounded-lg border border-[#4dc9fa22] bg-[#0f1422aa] backdrop-blur-sm">
+          <div className="p-3 space-y-2">
+            {sortedQueue.length === 0 ? (
+              <div className="text-center py-6">
+                <Music className="h-8 w-8 mx-auto mb-2 text-[#4dc9fa]" />
+                <p className="text-[#aab7e7] text-sm">Kuyruk boş</p>
+                <p className="text-[#7c8dbb] text-xs">Şarkı arayıp kuyruğa ekleyin</p>
+              </div>
+            ) : (
+              sortedQueue.map((song, index) => (
+                <div 
+                  key={song.id} 
+                  className={`flex items-center gap-3 p-2 rounded-lg border transition-all duration-300 backdrop-blur-sm ${
+                    currentSong?.id === song.id 
+                      ? 'bg-[#4dc9fa22] border-[#4dc9fa] shadow-[#4dc9fa22]' 
+                      : 'bg-[#0f1422aa] border-[#4dc9fa22] hover:bg-[#4dc9fa11] hover:border-[#4dc9fa44]'
+                  }`}
+                >
+                  {/* Thumbnail - Sabit boyut */}
+                  <div className="relative flex-shrink-0">
+                    <img 
+                      src={song.thumbnail} 
+                      alt={song.title} 
+                      className="w-10 h-10 rounded-lg object-cover shadow-md" 
+                    />
+                    {currentSong?.id === song.id && (
+                      <div className="absolute inset-0 bg-[#4dc9fa22] rounded-lg flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#4dc9fa] animate-pulse"></div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Şarkı Bilgileri - Responsive */}
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <p className="text-[#e5eaff] font-medium text-sm leading-tight break-words line-clamp-2">
+                      {song.title}
+                    </p>
+                    <p className="text-[#aab7e7] text-xs leading-tight break-words line-clamp-1 mt-0.5">
+                      {song.artist}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[#7c8dbb] text-xs flex-shrink-0">#{song.queue_position + 1}</span>
+                      {currentSong?.id === song.id && (
+                        <span className="text-[#4dc9fa] text-xs font-medium flex-shrink-0">Çalıyor</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Silme Butonu - Sabit boyut */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => removeSong(song.id)}
+                    className="w-6 h-6 rounded-full bg-[#ff475722] text-red-400 hover:bg-[#ff475744] hover:text-red-300 transition-all duration-300 flex-shrink-0"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+    </Card>
+  );
+});
+
+MusicPlayer.displayName = "MusicPlayer";
+
+export default MusicPlayer; 

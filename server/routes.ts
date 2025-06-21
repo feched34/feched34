@@ -18,13 +18,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // LiveKit configuration
   const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
   const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET;
-  const LIVEKIT_WS_URL = process.env.LIVEKIT_WS_URL;
+  const LIVEKIT_WS_URL = process.env.LIVEKIT_URL;
 
   if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_WS_URL) {
     console.error("Missing required LiveKit environment variables");
     console.error("LIVEKIT_API_KEY:", !!LIVEKIT_API_KEY);
     console.error("LIVEKIT_API_SECRET:", !!LIVEKIT_API_SECRET);
-    console.error("LIVEKIT_WS_URL:", !!LIVEKIT_WS_URL);
+    console.error("LIVEKIT_WS_URL:", LIVEKIT_WS_URL);
+    console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('LIVEKIT')));
   }
 
   // Generate LiveKit token
@@ -125,6 +126,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // YouTube API endpoint
+  app.get("/api/youtube/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Query parameter 'q' is required" });
+      }
+
+      const YOUTUBE_API_KEY = process.env.VITE_YOUTUBE_API_KEY || process.env.YOUTUBE_API_KEY;
+      
+      if (!YOUTUBE_API_KEY) {
+        console.error("YouTube API key not found");
+        return res.status(500).json({ message: "YouTube API not configured" });
+      }
+
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${encodeURIComponent(q)}&type=video&key=${YOUTUBE_API_KEY}`;
+      
+      console.log(`Searching YouTube for: ${q}`);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`YouTube API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log(`YouTube search results: ${data.items?.length || 0} items found`);
+      
+      res.json(data);
+    } catch (error: any) {
+      console.error("YouTube search error:", error);
+      res.status(500).json({ message: "Failed to search YouTube", error: error.message });
+    }
+  });
+
+  // Ping endpoint
+  app.get("/api/ping", async (req, res) => {
+    try {
+      res.json({ 
+        success: true, 
+        timestamp: Date.now(),
+        message: "pong" 
+      });
+    } catch (error) {
+      console.error("Ping error:", error);
+      res.status(500).json({ message: "Failed to ping" });
+    }
+  });
+
+  // Müzik kontrol endpoint'leri
+  app.post("/api/music/play", async (req, res) => {
+    try {
+      const { roomId, videoId, userId } = req.body;
+      
+      if (!roomId || !videoId || !userId) {
+        return res.status(400).json({ message: "Room ID, video ID and user ID are required" });
+      }
+
+      // WebSocket ile müzik çalma komutunu yayınla
+      broadcastMusicControl(roomId, {
+        type: 'play',
+        videoId,
+        userId,
+        timestamp: Date.now()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Music play error:", error);
+      res.status(500).json({ message: "Failed to play music" });
+    }
+  });
+
+  app.post("/api/music/pause", async (req, res) => {
+    try {
+      const { roomId, userId } = req.body;
+      
+      if (!roomId || !userId) {
+        return res.status(400).json({ message: "Room ID and user ID are required" });
+      }
+
+      // WebSocket ile müzik duraklatma komutunu yayınla
+      broadcastMusicControl(roomId, {
+        type: 'pause',
+        userId,
+        timestamp: Date.now()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Music pause error:", error);
+      res.status(500).json({ message: "Failed to pause music" });
+    }
+  });
+
+  app.post("/api/music/queue", async (req, res) => {
+    try {
+      const { roomId, song, userId } = req.body;
+      
+      if (!roomId || !song || !userId) {
+        return res.status(400).json({ message: "Room ID, song and user ID are required" });
+      }
+
+      // WebSocket ile kuyruk ekleme komutunu yayınla
+      broadcastMusicControl(roomId, {
+        type: 'add_to_queue',
+        song,
+        userId,
+        timestamp: Date.now()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Music queue error:", error);
+      res.status(500).json({ message: "Failed to add to queue" });
+    }
+  });
+
+  app.post("/api/music/shuffle", async (req, res) => {
+    try {
+      const { roomId, userId, isShuffled } = req.body;
+      
+      if (!roomId || !userId || typeof isShuffled !== 'boolean') {
+        return res.status(400).json({ message: "Room ID, user ID and shuffle state are required" });
+      }
+
+      // WebSocket ile shuffle komutunu yayınla
+      broadcastMusicControl(roomId, {
+        type: 'shuffle',
+        isShuffled,
+        userId,
+        timestamp: Date.now()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Music shuffle error:", error);
+      res.status(500).json({ message: "Failed to toggle shuffle" });
+    }
+  });
+
+  app.post("/api/music/repeat", async (req, res) => {
+    try {
+      const { roomId, userId, repeatMode } = req.body;
+      
+      if (!roomId || !userId || !repeatMode) {
+        return res.status(400).json({ message: "Room ID, user ID and repeat mode are required" });
+      }
+
+      // WebSocket ile repeat komutunu yayınla
+      broadcastMusicControl(roomId, {
+        type: 'repeat',
+        repeatMode,
+        userId,
+        timestamp: Date.now()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Music repeat error:", error);
+      res.status(500).json({ message: "Failed to set repeat mode" });
+    }
+  });
+
+  // Ses kontrol endpoint'leri
+  app.post("/api/sound/play", async (req, res) => {
+    try {
+      const { roomId, soundId, userId } = req.body;
+      
+      if (!roomId || !soundId || !userId) {
+        return res.status(400).json({ message: "Room ID, sound ID and user ID are required" });
+      }
+
+      // WebSocket ile ses çalma komutunu yayınla
+      broadcastSoundControl(roomId, {
+        type: 'play_sound',
+        soundId,
+        userId,
+        timestamp: Date.now()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Sound play error:", error);
+      res.status(500).json({ message: "Failed to play sound" });
+    }
+  });
+
+  app.post("/api/sound/stop", async (req, res) => {
+    try {
+      const { roomId, soundId, userId } = req.body;
+      
+      if (!roomId || !soundId || !userId) {
+        return res.status(400).json({ message: "Room ID, sound ID and user ID are required" });
+      }
+
+      // WebSocket ile ses durdurma komutunu yayınla
+      broadcastSoundControl(roomId, {
+        type: 'stop_sound',
+        soundId,
+        userId,
+        timestamp: Date.now()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Sound stop error:", error);
+      res.status(500).json({ message: "Failed to stop sound" });
+    }
+  });
+
   // WebSocket connection handling
   wss.on('connection', (ws: ExtendedWebSocket) => {
     console.log('WebSocket client connected');
@@ -157,6 +369,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             participants
           }));
         });
+      }
+    });
+  }
+
+  // Broadcast music control to WebSocket clients
+  function broadcastMusicControl(roomId: string, musicControl: any) {
+    wss.clients.forEach((client: ExtendedWebSocket) => {
+      if (client.readyState === WebSocket.OPEN && client.roomId === roomId) {
+        client.send(JSON.stringify({
+          type: 'music_control',
+          ...musicControl
+        }));
+      }
+    });
+  }
+
+  // Broadcast sound control to WebSocket clients
+  function broadcastSoundControl(roomId: string, soundControl: any) {
+    wss.clients.forEach((client: ExtendedWebSocket) => {
+      if (client.readyState === WebSocket.OPEN && client.roomId === roomId) {
+        client.send(JSON.stringify({
+          type: 'sound_control',
+          ...soundControl
+        }));
       }
     });
   }
