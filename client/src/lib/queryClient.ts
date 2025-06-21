@@ -7,8 +7,8 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Server URL'yi environment variable'dan al, yoksa localhost kullan
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5050';
+// Server URL'yi environment variable'dan al, yoksa relative URL kullan (production için)
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? '' : 'http://localhost:5050');
 
 export async function apiRequest(
   method: string,

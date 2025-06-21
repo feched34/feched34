@@ -36,7 +36,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const roomMusicState: Record<string, any> = {};
 
   // Generate LiveKit token
-  app.post("/api/token", async (req, res) => {
+  app.post("/api/auth", async (req, res) => {
     try {
       const { nickname, roomName }: LiveKitTokenRequest = req.body;
 
