@@ -9,6 +9,10 @@ interface ExtendedWebSocket extends WebSocket {
   roomId?: string;
 }
 
+// Oda bazlı soundboard state'ini memory'de tutmak için
+type SoundboardState = { sounds: any[] };
+const roomSoundboardState: Record<string, SoundboardState> = {};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
@@ -27,6 +31,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error("LIVEKIT_WS_URL:", LIVEKIT_WS_URL);
     console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('LIVEKIT')));
   }
+
+  // Oda bazlı müzik state'ini memory'de tutmak için
+  const roomMusicState: Record<string, any> = {};
 
   // Generate LiveKit token
   app.post("/api/token", async (req, res) => {
@@ -346,8 +353,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const data = JSON.parse(message.toString());
         
         if (data.type === 'join_room') {
-          // Handle room join
           ws.roomId = data.roomId;
+          // Odaya yeni katılan kullanıcıya mevcut müzik state'ini gönder
+          if (roomMusicState[data.roomId]) {
+            ws.send(JSON.stringify({
+              type: 'music_state_broadcast',
+              state: roomMusicState[data.roomId]
+            }));
+          }
+          // Odaya yeni katılan kullanıcıya mevcut soundboard state'ini gönder
+          if (roomSoundboardState[data.roomId]) {
+            ws.send(JSON.stringify({
+              type: 'soundboard_state_broadcast',
+              state: roomSoundboardState[data.roomId]
+            }));
+          }
+        }
+        // Müzik state güncellemesi
+        if (data.type === 'music_state_update' && ws.roomId) {
+          roomMusicState[ws.roomId] = data.state;
+          wss.clients.forEach((client: ExtendedWebSocket) => {
+            if (client.readyState === WebSocket.OPEN && client.roomId === ws.roomId) {
+              client.send(JSON.stringify({
+                type: 'music_state_broadcast',
+                state: data.state
+              }));
+            }
+          });
+        }
+        // Soundboard state güncellemesi
+        if (data.type === 'soundboard_state_update' && ws.roomId) {
+          roomSoundboardState[ws.roomId] = data.state;
+          wss.clients.forEach((client: ExtendedWebSocket) => {
+            if (client.readyState === WebSocket.OPEN && client.roomId === ws.roomId) {
+              client.send(JSON.stringify({
+                type: 'soundboard_state_broadcast',
+                state: data.state
+              }));
+            }
+          });
+        }
+        // Soundboard: sesi odadaki herkese çaldır
+        if (data.type === 'play_sound' && ws.roomId && data.soundId) {
+          wss.clients.forEach((client: ExtendedWebSocket) => {
+            if (client.readyState === WebSocket.OPEN && client.roomId === ws.roomId) {
+              client.send(JSON.stringify({
+                type: 'play_sound',
+                soundId: data.soundId
+              }));
+            }
+          });
         }
       } catch (error) {
         console.error('WebSocket message error:', error);

@@ -162,3 +162,68 @@
     -webkit-line-clamp: 5;
   }
 }
+
+/* giris.html özel stilleri */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+  animation: fadeInUp 0.8s forwards;
+}
+.fade-in-1 { animation-delay: 0.15s; }
+.fade-in-2 { animation-delay: 0.3s; }
+.fade-in-3 { animation-delay: 0.45s; }
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.glass {
+  background: rgba(22, 24, 40, 0.85);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25);
+  border-radius: 22px;
+  border: 1.5px solid rgba(160, 160, 255, 0.12);
+}
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #23305b 35%, #2ec8fa66 65%, transparent);
+  opacity: 0.3;
+  margin: 28px 0;
+}
+.logo-emoji {
+  animation: popIn 0.9s cubic-bezier(.21,1.5,.39,1) both;
+  filter: drop-shadow(0 2px 24px #2ec8fa55);
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.7) rotate(-22deg); }
+  80% { opacity: 1; transform: scale(1.08) rotate(5deg);}
+  100% { opacity: 1; transform: scale(1) rotate(0);}
+}
+.main-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.13;
+}
+.btn-shine {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#161828, #161828) padding-box,
+    linear-gradient(90deg, #6a7bfd, #2ec8fa 80%) border-box;
+  border-radius: 12px;
+  transition: background 0.24s, box-shadow 0.24s;
+}
+.btn-shine:hover {
+  background: linear-gradient(90deg,#556bff 20%,#2ec8fa 90%);
+  box-shadow: 0 4px 24px 0 #3c5ddf44;
+  color: #fff;
+  outline: 2px solid #2ec8fa80;
+}
+.input-glow:focus {
+  box-shadow: 0 0 0 2.5px #8fa7ff80, 0 0 8px 0 #2ec8fa55;
+  border-color: #6a7bfd;
+  outline: none;
+  background: rgba(34,38,64,0.98);
+  transition: box-shadow 0.25s, background 0.25s;
+}
