@@ -8,7 +8,15 @@ async function throwIfResNotOk(res: Response) {
 }
 
 // Server URL'yi environment variable'dan al, yoksa relative URL kullan (production için)
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? '' : 'http://localhost:5050');
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.MODE === 'production' ? '' : 'http://localhost:5050');
+
+// Debug için URL'yi yazdır
+console.log('Environment:', {
+  MODE: import.meta.env.MODE,
+  PROD: import.meta.env.PROD,
+  VITE_SERVER_URL: import.meta.env.VITE_SERVER_URL,
+  SERVER_URL: SERVER_URL
+});
 
 export async function apiRequest(
   method: string,
@@ -17,6 +25,9 @@ export async function apiRequest(
 ): Promise<Response> {
   // URL'yi server adresi ile birleştir
   const fullUrl = url.startsWith('http') ? url : `${SERVER_URL}${url}`;
+  
+  // Debug için URL'yi yazdır
+  console.log('API Request:', { method, url, fullUrl, SERVER_URL });
   
   const res = await fetch(fullUrl, {
     method,
