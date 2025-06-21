@@ -25,11 +25,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const LIVEKIT_WS_URL = process.env.LIVEKIT_WS_URL;
 
   if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_WS_URL) {
-    console.error("Missing required LiveKit environment variables");
-    console.error("LIVEKIT_API_KEY:", !!LIVEKIT_API_KEY);
-    console.error("LIVEKIT_API_SECRET:", !!LIVEKIT_API_SECRET);
-    console.error("LIVEKIT_WS_URL:", LIVEKIT_WS_URL);
-    console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('LIVEKIT')));
+    console.warn("⚠️  Missing required LiveKit environment variables");
+    console.warn("LIVEKIT_API_KEY:", !!LIVEKIT_API_KEY);
+    console.warn("LIVEKIT_API_SECRET:", !!LIVEKIT_API_SECRET);
+    console.warn("LIVEKIT_WS_URL:", LIVEKIT_WS_URL);
+    console.warn("Available env vars:", Object.keys(process.env).filter(key => key.includes('LIVEKIT')));
+    console.warn("Voice chat features will be disabled until LiveKit is configured.");
   }
 
   // Oda bazlı müzik state'ini memory'de tutmak için
@@ -38,6 +39,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate LiveKit token
   app.post("/api/auth", async (req, res) => {
     try {
+      // LiveKit yapılandırması kontrol et
+      if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_WS_URL) {
+        return res.status(503).json({ 
+          message: "Voice chat service is temporarily unavailable. Please try again later.",
+          error: "LIVEKIT_NOT_CONFIGURED"
+        });
+      }
+
       const { nickname, roomName }: LiveKitTokenRequest = req.body;
 
       if (!nickname || !roomName) {
