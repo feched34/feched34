@@ -2,6 +2,7 @@ import React, { memo, useState, useEffect, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Mic, MicOff, Headphones, VolumeX, Wifi, WifiOff } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { apiRequest } from '../lib/queryClient';
 
 interface VoiceControlsProps {
   isMuted: boolean;
@@ -18,15 +19,11 @@ const VoiceControls: React.FC<VoiceControlsProps> = memo(({ isMuted, isDeafened,
   const measurePing = useCallback(async () => {
     const startTime = Date.now();
     try {
-      const response = await fetch('/api/ping', { method: 'GET' });
-      if (response.ok) {
-        const endTime = Date.now();
-        const pingTime = endTime - startTime;
-        setPing(pingTime);
-        setIsConnected(true);
-      } else {
-        setIsConnected(false);
-      }
+      const response = await apiRequest('GET', '/api/ping');
+      const endTime = Date.now();
+      const pingTime = endTime - startTime;
+      setPing(pingTime);
+      setIsConnected(true);
     } catch (error) {
       setIsConnected(false);
     }

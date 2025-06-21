@@ -22,6 +22,7 @@ import {
   X,
   Plus
 } from 'lucide-react';
+import { apiRequest } from '../../lib/queryClient';
 
 // YouTube Iframe API yükleyici - komponentin dışında tanımla
 const loadYouTubeIframeAPI = () => {
@@ -332,7 +333,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = memo(({ currentUser, isMuted = f
     
     setIsSearching(true);
     try {
-      const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
+      const response = await apiRequest('GET', `/api/youtube/search?q=${encodeURIComponent(query)}`);
       const data = await response.json();
       
       if (data.items && data.items.length > 0) {

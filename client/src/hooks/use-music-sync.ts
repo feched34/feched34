@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { apiRequest } from '../lib/queryClient';
 
 interface MusicControlMessage {
   type: 'play' | 'pause' | 'add_to_queue' | 'shuffle' | 'repeat';
@@ -109,11 +110,7 @@ export function useMusicSync({ roomId, userId, onPlay, onPause, onAddToQueue, on
 
   const sendPlayCommand = useCallback(async (videoId: string) => {
     try {
-      await fetch('/api/music/play', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, videoId, userId })
-      });
+      await apiRequest('POST', '/api/music/play', { roomId, videoId, userId });
     } catch (error) {
       console.error('Error sending play command:', error);
     }
@@ -121,11 +118,7 @@ export function useMusicSync({ roomId, userId, onPlay, onPause, onAddToQueue, on
 
   const sendPauseCommand = useCallback(async () => {
     try {
-      await fetch('/api/music/pause', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, userId })
-      });
+      await apiRequest('POST', '/api/music/pause', { roomId, userId });
     } catch (error) {
       console.error('Error sending pause command:', error);
     }
@@ -133,11 +126,7 @@ export function useMusicSync({ roomId, userId, onPlay, onPause, onAddToQueue, on
 
   const sendAddToQueueCommand = useCallback(async (song: any) => {
     try {
-      await fetch('/api/music/queue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, song, userId })
-      });
+      await apiRequest('POST', '/api/music/queue', { roomId, song, userId });
     } catch (error) {
       console.error('Error sending add to queue command:', error);
     }
@@ -145,11 +134,7 @@ export function useMusicSync({ roomId, userId, onPlay, onPause, onAddToQueue, on
 
   const sendShuffleCommand = useCallback(async (isShuffled: boolean) => {
     try {
-      await fetch('/api/music/shuffle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, isShuffled, userId })
-      });
+      await apiRequest('POST', '/api/music/shuffle', { roomId, isShuffled, userId });
     } catch (error) {
       console.error('Error sending shuffle command:', error);
     }
@@ -157,11 +142,7 @@ export function useMusicSync({ roomId, userId, onPlay, onPause, onAddToQueue, on
 
   const sendRepeatCommand = useCallback(async (repeatMode: string) => {
     try {
-      await fetch('/api/music/repeat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, repeatMode, userId })
-      });
+      await apiRequest('POST', '/api/music/repeat', { roomId, repeatMode, userId });
     } catch (error) {
       console.error('Error sending repeat command:', error);
     }

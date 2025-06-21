@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { apiRequest } from '../lib/queryClient';
 
 interface SoundControlMessage {
   type: 'play_sound' | 'stop_sound';
@@ -88,11 +89,7 @@ export function useSoundSync({ roomId, userId, onPlaySound, onStopSound }: UseSo
 
   const sendPlaySoundCommand = useCallback(async (soundId: string) => {
     try {
-      await fetch('/api/sound/play', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, soundId, userId })
-      });
+      await apiRequest('POST', '/api/sound/play', { roomId, soundId, userId });
     } catch (error) {
       console.error('Error sending play sound command:', error);
     }
@@ -100,11 +97,7 @@ export function useSoundSync({ roomId, userId, onPlaySound, onStopSound }: UseSo
 
   const sendStopSoundCommand = useCallback(async (soundId: string) => {
     try {
-      await fetch('/api/sound/stop', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, soundId, userId })
-      });
+      await apiRequest('POST', '/api/sound/stop', { roomId, soundId, userId });
     } catch (error) {
       console.error('Error sending stop sound command:', error);
     }
