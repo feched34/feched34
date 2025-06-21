@@ -20,9 +20,9 @@ export function useSoundSync({ roomId, userId, onPlaySound, onStopSound }: UseSo
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    // Production'da relative URL kullan, development'ta localhost
-    const wsUrl = import.meta.env.MODE === 'production'
-      ? `wss://${window.location.host}/ws`
+    // Production'da doğru URL kullan, development'ta localhost
+    const wsUrl = window.location.hostname !== 'localhost'
+      ? `wss://feched.onrender.com/ws`
       : 'ws://localhost:5050/ws';
     
     try {

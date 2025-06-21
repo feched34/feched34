@@ -7,8 +7,9 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Server URL'yi environment variable'dan al, yoksa relative URL kullan (production için)
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || (window.location.hostname !== 'localhost' ? '' : 'http://localhost:5050');
+// Server URL'yi environment variable'dan al, yoksa production'da doğru URL kullan
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 
+  (window.location.hostname !== 'localhost' ? 'https://feched.onrender.com' : 'http://localhost:5050');
 
 // Debug için URL'yi yazdır
 console.log('Environment:', {
