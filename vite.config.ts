@@ -20,13 +20,12 @@ export default defineConfig({
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
-    emptyOutDir: true,
+    emptyOutDir: false,
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -64,7 +63,6 @@ export default defineConfig({
       '@tsparticles/react',
       'tsparticles',
     ],
-    exclude: ['@rollup/rollup-linux-x64-gnu'],
   },
   css: {
     devSourcemap: true,

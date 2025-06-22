@@ -6,7 +6,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
-    "build": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && echo '<!DOCTYPE html><html lang=\"tr\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>VoiceCommunity</title><style>body{font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white}.container{text-align:center;padding:2rem;background:rgba(255,255,255,0.1);border-radius:10px;backdrop-filter:blur(10px)}h1{margin-bottom:1rem}p{margin-bottom:0.5rem}</style></head><body><div class=\"container\"><h1>🎵 VoiceCommunity</h1><p>Modern sesli sohbet ve senkronize müzik çalar uygulaması</p><p>API çalışıyor! 🚀</p></div></body></html>' > dist/index.html",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build",
+    "build:server": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push"
@@ -81,6 +83,7 @@
     "tsparticles-engine": "^2.12.0",
     "tw-animate-css": "^1.2.5",
     "vaul": "^1.1.2",
+    "vite": "^5.4.14",
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
     "zod": "^3.24.2",

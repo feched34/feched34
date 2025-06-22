@@ -68,15 +68,15 @@ app.use((req, res, next) => {
     const distPath = path.resolve(import.meta.dirname, "..", "dist");
     
     if (fs.existsSync(distPath)) {
+      // Static dosyaları serve et
       app.use(express.static(distPath));
       
-      // SPA için fallback
+      // SPA için fallback - tüm route'ları index.html'e yönlendir
       app.use("*", (_req, res) => {
         res.sendFile(path.resolve(distPath, "index.html"));
       });
     } else {
       console.log("Dist folder not found, serving development mode");
-      // Development fallback
       app.use("*", (_req, res) => {
         res.send("Development mode - please run npm run dev");
       });
