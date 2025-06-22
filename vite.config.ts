@@ -35,7 +35,9 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
-        '@rollup/rollup-linux-x64-gnu'
+        '@rollup/rollup-linux-x64-gnu',
+        '@rollup/rollup-win32-x64-msvc',
+        '@rollup/rollup-darwin-x64'
       ],
       output: {
         manualChunks: {
