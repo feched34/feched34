@@ -63,28 +63,129 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Production'da static dosyaları serve et
+  // Production'da basit bir mesaj göster
   if (process.env.NODE_ENV === "production") {
-    const distPath = path.resolve(import.meta.dirname, "..", "dist");
-    
-    if (fs.existsSync(distPath)) {
-      // Static dosyaları serve et
-      app.use(express.static(distPath));
-      
-      // SPA için fallback - tüm route'ları index.html'e yönlendir
-      app.use("*", (_req, res) => {
-        res.sendFile(path.resolve(distPath, "index.html"));
-      });
-    } else {
-      console.log("Dist folder not found, serving development mode");
-      app.use("*", (_req, res) => {
-        res.send("Development mode - please run npm run dev");
-      });
-    }
+    app.use("*", (_req, res) => {
+      res.send(`
+        <!DOCTYPE html>
+        <html lang="tr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>VoiceCommunity API</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+            }
+            .container {
+              text-align: center;
+              padding: 2rem;
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 10px;
+              backdrop-filter: blur(10px);
+              max-width: 600px;
+            }
+            h1 {
+              margin-bottom: 1rem;
+            }
+            p {
+              margin-bottom: 0.5rem;
+            }
+            .api-info {
+              background: rgba(255, 255, 255, 0.1);
+              padding: 1rem;
+              border-radius: 5px;
+              margin: 1rem 0;
+            }
+            .dev-link {
+              color: #ffd700;
+              text-decoration: none;
+            }
+            .dev-link:hover {
+              text-decoration: underline;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>🎵 VoiceCommunity</h1>
+            <p>Modern sesli sohbet ve senkronize müzik çalar uygulaması</p>
+            <div class="api-info">
+              <p><strong>API çalışıyor! 🚀</strong></p>
+              <p>Bu production API sunucusudur.</p>
+              <p>Tam uygulamayı görmek için development modunda çalıştırın:</p>
+              <p><code>npm run dev</code></p>
+            </div>
+            <p>API Endpoints:</p>
+            <p>• /api/health - Sağlık kontrolü</p>
+            <p>• /api/voice - Sesli sohbet API'si</p>
+            <p>• /api/music - Müzik API'si</p>
+          </div>
+        </body>
+        </html>
+      `);
+    });
   } else {
     // Development mode
     app.use("*", (_req, res) => {
-      res.send("Development mode - please run npm run dev");
+      res.send(`
+        <!DOCTYPE html>
+        <html lang="tr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>VoiceCommunity - Development</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+            }
+            .container {
+              text-align: center;
+              padding: 2rem;
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 10px;
+              backdrop-filter: blur(10px);
+            }
+            h1 {
+              margin-bottom: 1rem;
+            }
+            p {
+              margin-bottom: 0.5rem;
+            }
+            .dev-link {
+              color: #ffd700;
+              text-decoration: none;
+            }
+            .dev-link:hover {
+              text-decoration: underline;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>🎵 VoiceCommunity</h1>
+            <p>Development modu aktif</p>
+            <p>Tam uygulamayı görmek için:</p>
+            <p><a href="http://localhost:5173" class="dev-link">http://localhost:5173</a></p>
+            <p>Veya ayrı bir terminal'de: <code>cd client && npm run dev</code></p>
+          </div>
+        </body>
+        </html>
+      `);
     });
   }
 
