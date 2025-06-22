@@ -1,7 +1,8 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import fs from "fs";
 
 const app = express();
 
@@ -44,7 +45,7 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      log(logLine);
+      console.log(logLine);
     }
   });
 
@@ -62,18 +63,34 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
+  // Production'da static dosyaları serve et
+  if (process.env.NODE_ENV === "production") {
+    const distPath = path.resolve(import.meta.dirname, "..", "dist");
+    
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      
+      // SPA için fallback
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(distPath, "index.html"));
+      });
+    } else {
+      console.log("Dist folder not found, serving development mode");
+      // Development fallback
+      app.use("*", (_req, res) => {
+        res.send("Development mode - please run npm run dev");
+      });
+    }
   } else {
-    serveStatic(app);
+    // Development mode
+    app.use("*", (_req, res) => {
+      res.send("Development mode - please run npm run dev");
+    });
   }
 
   // Render'da port 10000 kullan, development'ta 5050
   const port = parseInt(process.env.PORT || '5050');
   server.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port}`);
+    console.log(`serving on port ${port}`);
   });
 })();
