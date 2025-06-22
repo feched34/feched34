@@ -8,8 +8,7 @@ async function throwIfResNotOk(res: Response) {
 }
 
 // Server URL'yi environment variable'dan al, yoksa mevcut origin'i kullan
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 
-  (window.location.hostname === 'localhost' ? 'http://localhost:5050' : window.location.origin);
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || window.location.origin;
 
 // Debug için URL'yi yazdır
 console.log('Environment:', {

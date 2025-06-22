@@ -27,10 +27,10 @@ export function useMusicSync({ roomId, userId, onPlay, onPause, onAddToQueue, on
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    // Mevcut origin'i kullan, localhost ise localhost kullan
-    const wsUrl = window.location.hostname === 'localhost'
-      ? 'ws://localhost:5050/ws'
-      : `wss://${window.location.hostname}/ws`;
+    // Environment variable'dan al veya mevcut origin'i kullan
+    const wsUrl = import.meta.env.VITE_SERVER_URL 
+      ? `${import.meta.env.VITE_SERVER_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/ws`
+      : `${window.location.origin.replace('https://', 'wss://').replace('http://', 'ws://')}/ws`;
     
     try {
       wsRef.current = new WebSocket(wsUrl);
