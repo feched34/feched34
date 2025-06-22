@@ -45,6 +45,7 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 1000,
+    target: 'es2020',
   },
   server: {
     fs: {
@@ -63,6 +64,7 @@ export default defineConfig({
       '@tsparticles/react',
       'tsparticles',
     ],
+    exclude: ['@rollup/rollup-linux-x64-gnu'],
   },
   css: {
     devSourcemap: true,
