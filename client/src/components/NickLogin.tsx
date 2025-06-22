@@ -25,10 +25,10 @@ export default function NickLogin({ onLogin }: { onLogin: (nickname: string) => 
         opacity: 0.19,
         width: 1.2
       },
-      move: { enable: true, speed: 1.1, direction: "none", straight: false }
+      move: { enable: true, speed: 1.1, direction: "none" as const, straight: false }
     },
     interactivity: {
-      detect_on: "canvas",
+      detect_on: "canvas" as const,
       events: {
         onhover: { enable: true, mode: "grab" },
         onclick: { enable: false },

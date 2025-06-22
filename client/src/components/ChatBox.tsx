@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import { FaSmile, FaPaperclip, FaPaperPlane } from 'react-icons/fa';
+import { useChatSync } from '@/hooks/use-chat-sync';
 
 // Basit kullanıcı ve mesaj tipi
 interface User {
@@ -26,12 +27,13 @@ interface Message {
 interface ChatBoxProps {
   currentUser: User;
   users: User[];
+  roomId: string;
 }
 
 // Emoji listesini sabit olarak tanımla
 const emojiList = ['🔥', '😂', '😎', '😍', '👍', '🥳', '😭', '😡', '🎉', '❤️', '😊', '🤔', '👏', '💯', '🚀'] as const;
 
-const ChatBox: React.FC<ChatBoxProps> = memo(({ currentUser, users }) => {
+const ChatBox: React.FC<ChatBoxProps> = memo(({ currentUser, users, roomId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
@@ -39,9 +41,21 @@ const ChatBox: React.FC<ChatBoxProps> = memo(({ currentUser, users }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // WebSocket ile sohbet senkronizasyonu
+  const { sendMessage: sendWebSocketMessage } = useChatSync({
+    roomId,
+    userId: currentUser.id,
+    userName: currentUser.name,
+    userAvatar: currentUser.avatar,
+    onMessageReceived: (message: Message) => {
+      setMessages(prev => [...prev, message]);
+    }
+  });
+
   // Mesaj gönder - useCallback ile optimize et
   const sendMessage = useCallback(() => {
     if (!input.trim()) return;
+    
     const newMsg: Message = {
       id: 'm' + Date.now(),
       user: currentUser,
@@ -49,10 +63,16 @@ const ChatBox: React.FC<ChatBoxProps> = memo(({ currentUser, users }) => {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       type: 'text',
     };
+    
+    // Yerel state'e ekle
     setMessages(prev => [...prev, newMsg]);
+    
+    // WebSocket ile gönder
+    sendWebSocketMessage(input);
+    
     setInput('');
     setShowEmojis(false);
-  }, [input, currentUser]);
+  }, [input, currentUser, sendWebSocketMessage]);
 
   // Emoji ekle - useCallback ile optimize et
   const addEmoji = useCallback((emoji: string) => {
@@ -178,17 +198,17 @@ const ChatBox: React.FC<ChatBoxProps> = memo(({ currentUser, users }) => {
   }, [messages, scrollToBottom]);
 
   return (
-    <Card className="glass bg-gradient-to-br from-[#101320ee] to-[#23305b99] border border-[#23253a] rounded-2xl shadow-2xl p-4 w-full max-w-2xl mx-auto flex flex-col flex-1">
+    <Card className="glass bg-gradient-to-br from-[#101320ee] to-[#23305b99] border border-[#23253a] rounded-2xl shadow-2xl p-4 w-full max-w-2xl mx-auto flex flex-col h-full">
       {/* Header */}
-      <div className="mb-2">
+      <div className="mb-2 flex-shrink-0">
         <h3 className="text-lg font-bold bg-gradient-to-r from-[#4dc9fa] to-[#7dd3fc] bg-clip-text text-transparent tracking-tight flex items-center gap-2">
           <span>Genel Sohbet</span>
           <span className="text-[#2ec8fa] bg-[#2ec8fa22] px-2 py-0.5 rounded-full text-xs">({messages.length})</span>
         </h3>
       </div>
       
-      {/* Mesajlar */}
-      <div className="flex-1 pr-1 sm:pr-2 mb-2 overflow-y-auto overflow-x-hidden chat-container-wrap" ref={scrollRef} style={{minHeight: '100%'}}>
+      {/* Mesajlar - Flex-1 ile kalan alanı kapla */}
+      <div className="flex-1 pr-1 sm:pr-2 mb-2 overflow-y-auto overflow-x-hidden chat-container-wrap" ref={scrollRef} style={{maxHeight: '60vh', minHeight: '200px'}}>
         <div className="flex flex-col gap-0.5 p-0 m-0 break-words">
           {groupedMessages.map((group, idx) => (
             <div key={group.messages[0].id} className="flex items-start gap-2 mb-1">
@@ -244,8 +264,8 @@ const ChatBox: React.FC<ChatBoxProps> = memo(({ currentUser, users }) => {
         </div>
       </div>
       
-      {/* Mesaj yazma alanı - Alt kısımda */}
-      <form className="flex flex-col gap-1 relative" onSubmit={handleSubmit}>
+      {/* Mesaj yazma alanı - Alt kısımda, flex-shrink-0 ile sabit */}
+      <form className="flex flex-col gap-1 relative flex-shrink-0" onSubmit={handleSubmit}>
         {/* Emoji kutusu */}
         {showEmojis && (
           <div className="w-full bg-[#101320] border border-[#23253a] rounded-xl shadow-xl p-3 flex flex-row flex-wrap gap-2 z-50 mb-2">

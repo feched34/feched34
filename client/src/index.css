@@ -126,6 +126,25 @@
     hyphens: auto;
   }
   
+  /* ChatBox scrollbar stilleri */
+  .chat-container-wrap::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .chat-container-wrap::-webkit-scrollbar-track {
+    background: rgba(22, 24, 42, 0.3);
+    border-radius: 3px;
+  }
+  
+  .chat-container-wrap::-webkit-scrollbar-thumb {
+    background: rgba(78, 201, 250, 0.5);
+    border-radius: 3px;
+  }
+  
+  .chat-container-wrap::-webkit-scrollbar-thumb:hover {
+    background: rgba(78, 201, 250, 0.7);
+  }
+  
   /* Line-clamp utility sınıfları */
   .line-clamp-1 {
     overflow: hidden;

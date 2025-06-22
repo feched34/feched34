@@ -339,6 +339,7 @@ export default function VoiceChat() {
                 <ChatBox
                   currentUser={currentUser}
                   users={users}
+                  roomId="default-room"
                 />
             </div>
             

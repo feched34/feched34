@@ -1,139 +1,115 @@
-# VoiceCommunity - v.1.1.0 🎵
+# VoiceCommunity 🎵🎤
 
-## 🎯 Proje Özeti
-React (Vite), Express/Node.js, LiveKit ve WebSocket tabanlı modern sesli sohbet ve **senkronize müzik çalar** uygulaması.
+Modern sesli sohbet ve senkronize müzik çalar uygulaması. Arkadaşlarınızla birlikte müzik dinleyin, sesli sohbet edin ve gerçek zamanlı iletişim kurun.
 
-## ✨ v.1.1.0 Senkronize Özellikleri
+## ✨ Özellikler
 
-### 🎵 Senkronize Müzik Sistemi
-- ✅ **WebSocket tabanlı gerçek zamanlı müzik senkronizasyonu**
-- ✅ **Tüm kullanıcılar için ortak müzik kontrolü**
-- ✅ **Play/Pause, Next/Previous, Shuffle, Repeat senkronizasyonu**
-- ✅ **Kuyruk ekleme/çıkarma senkronizasyonu**
-- ✅ **Otomatik yeniden bağlanma özelliği**
-- ✅ **Kişisel ses seviyesi kontrolü (senkronize değil)**
+- 🎤 **Sesli Sohbet**: LiveKit ile yüksek kaliteli sesli iletişim
+- 🎵 **Senkronize Müzik**: YouTube'dan müzik arayın ve birlikte dinleyin
+- 💬 **Gerçek Zamanlı Chat**: WebSocket ile anlık mesajlaşma
+- 🎨 **Modern UI**: Tailwind CSS ve Radix UI ile güzel arayüz
+- 🌟 **Particles Animasyonları**: Etkileyici görsel efektler
+- 📱 **Responsive**: Mobil ve masaüstü uyumlu
+- 🔔 **Ses Efektleri**: Emoji reaksiyonları ve ses board
 
-### 🎤 Sesli Sohbet
-- ✅ LiveKit entegrasyonu ile gerçek zamanlı sesli iletişim
-- ✅ Mikrofon açma/kapama ve sağırlaştırma özellikleri
-- ✅ Katılımcı listesi ve ses seviyesi kontrolü
-- ✅ Konuşma durumu göstergeleri (yeşil halka animasyonu)
-- ✅ Mikrofon ve deafen durumu belirteçleri
+## 🚀 Canlı Demo
 
-### 💬 Yazılı Sohbet
-- ✅ Modern, emoji destekli sohbet arayüzü
-- ✅ Emoji reaksiyon sistemi (bırakma/kaldırma)
-- ✅ Medya paylaşımı (resim/video)
-- ✅ Mesaj gruplandırma (aynı kullanıcı)
-- ✅ **Uzun mesajlar için word-wrap optimizasyonu**
-- ✅ **Responsive tasarım iyileştirmeleri**
-- ✅ Akıllı saat gösterimi (aynı dakikada sadece son mesajda)
-- ✅ Kompakt tasarım (minimal boşluklar)
+Uygulama şu anda canlı olarak çalışıyor! Arkadaşlarınızla birlikte kullanmak için:
 
-### 🎵 Müzik Çalar
-- ✅ YouTube API entegrasyonu
-- ✅ Şarkı arama ve otomatik oynatma
-- ✅ Kuyruk yönetimi
-- ✅ Ses kontrolü ve ilerleme çubuğu
-- ✅ Modern müzik çalar arayüzü
-- ✅ **Senkronize müzik kontrolleri**
-
-### 🎨 Kullanıcı Arayüzü
-- ✅ Koyu tema (uzay/galaktik renkler)
-- ✅ Cam efektli (glassmorphism) tasarım
-- ✅ Particles animasyonu (tsparticles)
-- ✅ Responsive tasarım
-- ✅ Smooth animasyonlar ve geçişler
-- ✅ Modern UI komponentleri
-
-### 🔧 Teknik Özellikler
-- ✅ TypeScript desteği
-- ✅ WebSocket bağlantısı
-- ✅ Environment variables (.env)
-- ✅ Error handling ve loading states
-- ✅ Performance optimizasyonları
-- ✅ Modern React hooks (useCallback, useMemo, useRef)
-- ✅ **useMusicSync Hook**
-- ✅ **WebSocket Müzik Kontrolü**
-
-## 🚀 Kurulum
-
-### Gereksinimler
-- Node.js 18+
-- npm veya yarn
-- LiveKit hesabı ve API anahtarları
-- YouTube Data API anahtarı
-
-### Adımlar
-1. **Repository'yi klonlayın**
-   ```bash
-   git clone [repository-url]
-   cd VoiceCommunity
-   ```
-
-2. **Bağımlılıkları yükleyin**
-   ```bash
-   npm install
-   ```
-
-3. **Environment dosyalarını oluşturun**
-   ```bash
-   # .env dosyası
-   VITE_LIVEKIT_URL=your_livekit_url
-   VITE_YOUTUBE_API_KEY=your_youtube_api_key
-   ```
-
-4. **Server'ı başlatın**
-   ```bash
-   npm run dev
-   ```
-
-5. **Client'ı başlatın**
-   ```bash
-   cd client
-   npm run dev
-   ```
-
-## 🎯 Kullanım
-
-1. **Odaya Katılma**: Nickname girerek odaya katılın
-2. **Sesli Sohbet**: Mikrofon ve ses kontrollerini kullanın
-3. **Yazılı Sohbet**: Mesaj yazın, emoji bırakın, medya paylaşın
-4. **Senkronize Müzik**: Şarkı arayın, çalın ve tüm odadaki kullanıcılarla senkronize olun
-
-## 🔮 Gelecek Versiyonlar
-
-### v.1.2 Planları
-- [ ] Oda yönetimi (oda oluşturma/katılma)
-- [ ] Kullanıcı rolleri (admin, moderator)
-- [ ] Gelişmiş ses efektleri ve soundboard
-- [ ] Ekran paylaşımı
-- [ ] Dosya paylaşımı
-
-### v.2.0 Planları
-- [ ] Video görüşme
-- [ ] Grup sohbetleri
-- [ ] Bildirim sistemi
-- [ ] Mobil uygulama
-- [ ] Gelişmiş güvenlik özellikleri
+1. **Render.com** üzerinde deploy edildi
+2. **PostgreSQL** database kullanılıyor
+3. **LiveKit** ile sesli sohbet
+4. **YouTube API** ile müzik arama
 
 ## 🛠️ Teknolojiler
 
-- **Frontend**: React 18, TypeScript, Vite
-- **Backend**: Node.js, Express
-- **Sesli İletişim**: LiveKit
-- **UI**: Tailwind CSS, shadcn/ui
-- **Animasyonlar**: tsparticles, Framer Motion
-- **API**: YouTube Data API
-- **WebSocket**: Socket.io
-- **Müzik Senkronizasyonu**: Custom WebSocket Protocol
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
+- **Backend**: Node.js, Express, WebSocket
+- **Database**: PostgreSQL, Drizzle ORM
+- **Voice Chat**: LiveKit
+- **Music**: YouTube API
+- **Deployment**: Render.com
 
-## 📝 Lisans
+## 📦 Kurulum
 
-MIT License
+### Gereksinimler
+- Node.js 18+
+- PostgreSQL
+- LiveKit hesabı
+- YouTube API key
+
+### Lokal Kurulum
+
+```bash
+# Repository'yi klonlayın
+git clone https://github.com/yourusername/voicecommunity.git
+cd voicecommunity
+
+# Bağımlılıkları yükleyin
+npm install
+
+# Environment variables'ları ayarlayın
+# .env dosyası oluşturun ve gerekli değişkenleri ekleyin
+
+# Database'i hazırlayın
+npm run db:push
+
+# Geliştirme sunucusunu başlatın
+npm run dev
+```
+
+### Environment Variables
+
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/database
+LIVEKIT_API_KEY=your_livekit_api_key
+LIVEKIT_API_SECRET=your_livekit_api_secret
+LIVEKIT_WS_URL=wss://your-livekit-instance.livekit.cloud
+YOUTUBE_API_KEY=your_youtube_api_key
+```
+
+## 🌐 Deployment
+
+Uygulamanızı canlıya almak için [DEPLOYMENT.md](./DEPLOYMENT.md) dosyasını inceleyin.
+
+### Hızlı Deployment (Render.com)
+
+1. [Render.com](https://render.com)'a gidin
+2. GitHub reponuzu bağlayın
+3. Environment variables'ları ekleyin
+4. Deploy edin!
+
+## 🎯 Kullanım
+
+1. **Giriş**: Nickname'inizi girin ve odaya katılın
+2. **Sesli Sohbet**: Mikrofon butonuna tıklayarak konuşmaya başlayın
+3. **Müzik**: YouTube'dan müzik arayın ve kuyruğa ekleyin
+4. **Chat**: Mesaj yazın ve emoji reaksiyonları gönderin
+5. **Ses Efektleri**: Ses board'dan efektler çalın
+
+## 🤝 Katkıda Bulunma
+
+1. Fork edin
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Commit edin (`git commit -m 'Add amazing feature'`)
+4. Push edin (`git push origin feature/amazing-feature`)
+5. Pull Request açın
+
+## 📄 Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+
+## 🙏 Teşekkürler
+
+- [LiveKit](https://livekit.io/) - Sesli sohbet altyapısı
+- [Radix UI](https://www.radix-ui.com/) - UI bileşenleri
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+- [YouTube API](https://developers.google.com/youtube) - Müzik arama
+
+## 📞 İletişim
+
+Sorularınız için issue açabilir veya pull request gönderebilirsiniz.
 
 ---
 
-**v.1.1.0 Senkronize Kilometre Taşı Tamamlandı! 🎵**
-
-Bu versiyonda müzik senkronizasyonu sistemi başarıyla tamamlandı. Artık tüm kullanıcılar müzik üzerinde ortak kontrol sahibi ve gerçek zamanlı senkronizasyon ile mükemmel bir deneyim yaşıyorlar! 
+**VoiceCommunity** ile arkadaşlarınızla mükemmel bir deneyim yaşayın! 🎉 

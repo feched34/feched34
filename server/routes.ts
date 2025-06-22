@@ -413,6 +413,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
         }
+        // Sohbet mesajı gönderme
+        if (data.type === 'chat_message' && ws.roomId && data.message) {
+          const chatMessage = {
+            id: 'm' + Date.now(),
+            user: {
+              id: data.userId,
+              name: data.userName,
+              avatar: data.userAvatar || '/logo.png'
+            },
+            content: data.message,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: 'text'
+          };
+          
+          // Odadaki tüm kullanıcılara mesajı gönder
+          wss.clients.forEach((client: ExtendedWebSocket) => {
+            if (client.readyState === WebSocket.OPEN && client.roomId === ws.roomId) {
+              client.send(JSON.stringify({
+                type: 'chat_message',
+                message: chatMessage
+              }));
+            }
+          });
+        }
       } catch (error) {
         console.error('WebSocket message error:', error);
       }
