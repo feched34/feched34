@@ -63,135 +63,34 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Production'da basit bir mesaj göster
+  // Production'da React uygulamasını serve et
   if (process.env.NODE_ENV === "production") {
-    app.use("*", (_req, res) => {
-      res.send(`
-        <!DOCTYPE html>
-        <html lang="tr">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>VoiceCommunity API</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-            }
-            .container {
-              text-align: center;
-              padding: 2rem;
-              background: rgba(255, 255, 255, 0.1);
-              border-radius: 10px;
-              backdrop-filter: blur(10px);
-              max-width: 600px;
-            }
-            h1 {
-              margin-bottom: 1rem;
-            }
-            p {
-              margin-bottom: 0.5rem;
-            }
-            .api-info {
-              background: rgba(255, 255, 255, 0.1);
-              padding: 1rem;
-              border-radius: 5px;
-              margin: 1rem 0;
-            }
-            .dev-link {
-              color: #ffd700;
-              text-decoration: none;
-            }
-            .dev-link:hover {
-              text-decoration: underline;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>🎵 VoiceCommunity</h1>
-            <p>Modern sesli sohbet ve senkronize müzik çalar uygulaması</p>
-            <div class="api-info">
-              <p><strong>API çalışıyor! 🚀</strong></p>
-              <p>Bu production API sunucusudur.</p>
-              <p>Tam uygulamayı görmek için development modunda çalıştırın:</p>
-              <p><code>npm run dev</code></p>
-            </div>
-            <p>API Endpoints:</p>
-            <p>• /api/health - Sağlık kontrolü</p>
-            <p>• /api/voice - Sesli sohbet API'si</p>
-            <p>• /api/music - Müzik API'si</p>
-          </div>
-        </body>
-        </html>
-      `);
-    });
+    const clientDistPath = path.resolve(import.meta.dirname, "..", "dist", "client");
+    
+    if (fs.existsSync(clientDistPath)) {
+      // Static dosyaları serve et
+      app.use(express.static(clientDistPath));
+      
+      // SPA için fallback - tüm route'ları index.html'e yönlendir
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(clientDistPath, "index.html"));
+      });
+    } else {
+      console.error("Client dist folder not found:", clientDistPath);
+      app.use("*", (_req, res) => {
+        res.status(500).send("Error: Client build not found. Please run npm run build first.");
+      });
+    }
   } else {
-    // Development mode
+    // Development mode - Vite dev server'a yönlendir
     app.use("*", (_req, res) => {
-      res.send(`
-        <!DOCTYPE html>
-        <html lang="tr">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>VoiceCommunity - Development</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-            }
-            .container {
-              text-align: center;
-              padding: 2rem;
-              background: rgba(255, 255, 255, 0.1);
-              border-radius: 10px;
-              backdrop-filter: blur(10px);
-            }
-            h1 {
-              margin-bottom: 1rem;
-            }
-            p {
-              margin-bottom: 0.5rem;
-            }
-            .dev-link {
-              color: #ffd700;
-              text-decoration: none;
-            }
-            .dev-link:hover {
-              text-decoration: underline;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>🎵 VoiceCommunity</h1>
-            <p>Development modu aktif</p>
-            <p>Tam uygulamayı görmek için:</p>
-            <p><a href="http://localhost:5173" class="dev-link">http://localhost:5173</a></p>
-            <p>Veya ayrı bir terminal'de: <code>cd client && npm run dev</code></p>
-          </div>
-        </body>
-        </html>
-      `);
+      res.redirect("http://localhost:5173");
     });
   }
 
   // Render'da port 10000 kullan, development'ta 5050
   const port = parseInt(process.env.PORT || '5050');
   server.listen(port, "0.0.0.0", () => {
-    console.log(`serving on port ${port}`);
+    console.log(`Server running on port ${port} (${process.env.NODE_ENV} mode)`);
   });
 })();

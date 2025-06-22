@@ -24,8 +24,8 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist"),
-    emptyOutDir: false,
+    outDir: path.resolve(import.meta.dirname, "dist", "client"),
+    emptyOutDir: true,
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -34,6 +34,9 @@ export default defineConfig({
       },
     },
     rollupOptions: {
+      external: [
+        '@rollup/rollup-linux-x64-gnu'
+      ],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
@@ -43,7 +46,6 @@ export default defineConfig({
         },
       },
     },
-    chunkSizeWarningLimit: 1000,
     target: 'es2020',
   },
   server: {
